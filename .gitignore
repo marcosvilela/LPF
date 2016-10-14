@@ -1,0 +1,165 @@
+function1 :: Int -> [Int]                -- gera uma sequencia de elementos até um certo x 
+function1 x = [1..x]
+
+soma :: Int -> Int                           --soma dois elementos
+soma x = x+1
+
+somaComplexos :: ((Int, Int),(Int, Int)) -> (Int, Int)  --soma dois números complexos do tipo (a,b)
+somaComplexos ((x1,y1),(x2,y2)) = (x1+x2,y1+y2)
+
+geraSequencia :: Int -> Int -> [Int]             --gera uma sequencia de quadrados a partir de uma lista criada até um certo y
+geraSequencia x y = [x^2 | x <- [1..y]]
+
+
+
+--                         funções para a 1° questão de LPF - Cálculo de raízes de uma equação do 2° grau 
+
+discriminante :: Float -> Float -> Float -> Float
+discriminante a b c = b^2 - 4*a*c
+
+bhaskara :: Float -> Float -> Float -> (Float,Float)
+bhaskara a b c = ((((negate b) + (sqrt(discriminante a b c)))/2*a),(((negate b) - (sqrt(discriminante a b c)))/2*a))
+
+raizesQuadratica :: Float -> Float -> Float -> (Float,Float)          
+raizesQuadratica a b c | discriminante a b c < 0  = (0.0,0.0)
+                       | discriminante a b c == 0  = (bhaskara a b c)
+                       | discriminante a b c > 0   = (bhaskara a b c)
+
+--                          funções para a 2° questão de LPF - n-ésimo termo de uma P.A e de uma P.G
+
+-- letra a)
+nthtermPA :: Int -> Int -> Int -> Int         --n-ésimo termo; recebe a razão, qual termo, e o termo inicial
+nthtermPA n a1 r = a1 + (n-1)*r
+
+--letra b)
+nthtermPG :: Int -> Int -> Int -> Int
+nthtermPG n a1 q = a1*(q^(n-1))
+
+--                                                   exercícios LPF 19/08/16
+-- 1) gerar uma lista de q termos de uma PA de razão r e primeiro termo k
+listaPA :: Integer -> Integer -> Integer -> [Integer]
+listaPA k r q = [k + (n-1)*r | n <- [1..q]]
+
+--2) gerar uma lista de q termos de uma PG de razão r e primeiro termo k
+listaPG :: Integer -> Integer -> Integer -> [Integer]
+listaPG q k r = [k*(r^(n-1)) | n <- [1..q]]
+
+--3) função achatar, que gera uma lista de inteiros a partir de uma lista de listas de inteiros
+achatar :: [[Int]] -> [Int]
+achatar l = []
+--4) função que faz o produto de todos os elementos de uma lista
+produtorioLista :: [Int] -> Int
+produtorioLista l |l==[] = 1
+                  |otherwise = (head l)*produtorioLista(tail l)
+
+---5) função fatorial, fibonacci e potência em definições guardadas
+factorial :: Int -> Int                              
+factorial x | x == 0 = 1
+            | otherwise = x*factorial(x-1)
+
+power :: Integer -> Integer -> Integer
+power b e | (e==0 && b /= 0)  = 1
+          | otherwise  = (b*(power b (e-1)))                 
+
+fibonacci :: Int -> Int
+fibonacci n |n==0   = n
+            |n==1   =1
+            |otherwise = fibonacci(n-2) + fibonacci(n-1)
+
+adiciona :: Int ->(Int -> Int)
+adiciona x = \ y -> x+y  --função lambda
+
+
+sequencia :: (Int -> Int) -> (Int -> Int) -> (Int -> Int)
+sequencia f g = \ x -> f(g x)                    --executa duas funções em sequencia
+
+
+fpot :: (Int -> Int) -> Int -> (Int -> Int)
+fpot f 0 = \x -> x                           --função identidade, caso base
+fpot f n = \x -> fpot f (n-1) (f (x))        --caso recursivo, aplica f(x) em f^n-1(x) 
+
+
+--calcular a média inteira de valores de uma lista (foldl)
+avglist :: [Int] -> Int
+avglist (h:t) = div(foldl (+) 1 (h:t)) (length(h:t))
+
+--quicksort
+quickSort :: [Int]->[Int]
+quickSort [] = []
+quickSort (h:t) = quickSort([x|x<-t, x<=h])++[h]++quickSort([x|x<-t, x>h])   
+
+--quicksort flexível 
+quickSortflex :: (Int -> Int -> Bool) -> [Int] -> [Int]
+quickSortflex _ [] = []
+quickSortflex _ [a] = [a]
+quickSortflex f (h:t) = (quickSortflex f ([x| x<- t, (f h x)]))++[h]++(quickSortflex f ([x| x<- t, not(f h x)]))
+
+--mergesort
+mergeSort :: [Int]->[Int]
+mergeSort [a] = [a]
+mergeSort [] = []
+mergeSort l = merge (mergeSort (divideR l)) (mergeSort (divideL l)) 
+
+divideR :: [Int] -> [Int]
+divideR l = drop (div(length l) 2) (l)
+divideL :: [Int] -> [Int]
+divideL l = take (div(length l) 2) (l)
+
+merge :: [Int]->[Int]->[Int]
+merge [] l = l
+merge l [] = l
+merge (h1:t1) (h2:t2) | h1 > h2 = h2:(merge (h1:t1) t2)
+                      | otherwise = h1:(merge t1 (h2:t2)) 
+
+
+--função all
+all1 :: [Bool] -> Bool
+all1 [] = True
+all1 (h:t) = h&&(all1 t)
+
+--função all com execução parcial
+allParc = \(h:t) -> h&&(head t)
+
+--função some
+some1 :: [Bool] -> Bool
+some1 [] = False
+some1 (h:t) = h || (some1 t)
+
+--função some com execução parcial
+someParc = \(h:t) -> h||(head t)
+
+--função flat
+
+flat1 :: [[a]] -> [a]
+flat1 [] = []
+flat1 (h:t) = h++(flat1 t)
+
+-- união de conjuntos
+
+removeDup :: [Int]->[Int]
+removeDup [] = []
+removeDup [a] = [a]
+removeDup (h1:h2:t) | h1 == h2 = removeDup (h2:t)
+                    |otherwise = h1:removeDup (h2:t)
+
+union :: [Int]->[Int]->[Int]
+union l1 l2 = removeDup (l1++l2)
+
+-- LPF Questão 2
+numNull :: [Int]->Int
+numNull l = (length l) - (length (filter (\x -> x /= 0) l))
+
+--LPF Questão 3
+
+numNullGen :: (Int -> Bool) -> [Int]->Int
+numNullGen f l = (length l) - (length ((filter f) l))
+
+--LPF Questão 4
+
+mediaP :: [Int] -> [Int] -> Int
+mediaP l1 l2 = div(somaProduto l1 l2) (foldl (+) 0 l2)
+
+
+somaProduto :: [Int] -> [Int] -> Int
+somaProduto [] [] = 0
+somaProduto (h1:t1) (h2:t2) = (h1*h2) + (somaProduto t1 t2)
