@@ -1,0 +1,192 @@
+--Projeto de LPF - Banco de Dados de Música
+-- Marcos Vilela, Rebecca Nascimento e Marcel Souza
+import System.IO
+import System.IO.Error
+import System.Directory
+
+
+--Data Type música, catalogada por nome, artista e ano (string, string, int)
+
+data Musica = Musica String String Int deriving (Show, Eq, Ord, Read)
+type BancoDados = [Musica]  --lista que será usada como database das músicas
+
+-- Funções para o tratamento do banco de dados utilizando arquivos (Ler, salvar e criar um novo banco de dados vazio)
+lerBD :: IO BancoDados
+lerBD = do
+    f <- openFile "bancodados.txt" ReadMode
+    str <- readFile "bancodados.txt"
+    bd <- (readIO str)
+    hClose f
+    return bd
+
+salvarBD :: BancoDados -> IO()
+salvarBD a = writeFile "bancodados.txt" (show a)
+
+newBD ::IO()
+newBD = salvarBD []
+
+--Funções para o tratamento do banco de dados com Lista, incluindo funções auxiliares de lista para simplificar o trabalho
+adicionarLista :: a -> [a] -> [a]
+adicionarLista aux [] = [aux]
+adicionarLista aux (h:t) = (h:t) ++ [aux]  
+
+ 
+adicionar :: Musica -> IO ()
+adicionar (Musica nome artista ano) = do
+    check <- consultar(Musica nome artista ano)
+    if(check)then putStr "Musica ja inserida no banco de dados!"
+    else do
+            bd <- lerBD
+            salvarBD (adicionarLista (Musica nome artista ano) bd)
+
+
+
+removerLista :: Eq a=> a -> [a] -> [a]
+removerLista aux l = filter(\x->x/=aux) l    
+
+remover :: Musica -> IO()
+remover (Musica nome artista ano) = do
+    bd <- lerBD
+    salvarBD (removerLista (Musica nome artista ano) bd)
+
+
+consultar :: Musica -> IO Bool
+consultar a = do
+    bd <- lerBD
+    return (elem a bd)
+
+buscarNome :: String -> IO Musica
+buscarNome a = do
+    bd <- lerBD
+    return ((head(filter(\(Musica nome artista ano)->nome==a) bd)))
+
+buscarArtista :: String -> IO Musica
+buscarArtista a = do
+    bd <- lerBD
+    return ((head(filter(\(Musica nome artista ano)->artista==a) bd)))
+
+
+buscarAno :: Int -> IO Musica
+buscarAno x = do
+    bd <- lerBD
+    return ((head(filter(\(Musica nome artista ano)->ano==x) bd)))
+
+
+-- funções auxiliares, para serem chamadas no menu e simplificar o código necessário
+pedirInt :: IO Int
+pedirInt = do
+    inteiro <- getLine
+    return (read inteiro :: Int)
+
+printTodos = do
+    f <- readFile "bancodados.txt"
+    putStrLn "TODAS AS MUSICAS REGISTRADAS:"
+    print f
+    putStr "\n"
+    menu
+
+
+pedirMusica = do
+    putStr "Digite o nome da musica: "
+    n <- getLine
+    putStr "Digite o artista da musica: "
+    a <- getLine
+    putStr "Digite o ano da musica: "
+    y <- pedirInt
+    return (n, a, y)
+
+printarMusica (Musica nome artista ano) = do
+    putStr artista
+    putStr " - "
+    putStr nome
+    putStr ", "
+    putStr (show ano)
+
+pedirAno = do
+    putStr "Digite o ano: "
+    y <- pedirInt
+    return y
+
+
+pedirArtista = do
+    putStr "Digite o artista: "
+    a <- getLine
+    return a
+
+pedirNome = do
+    putStr "Digite o nome: "
+    n <- getLine
+    return n
+
+addMenu = do
+    (n, a, y) <- pedirMusica
+    adicionar (Musica n a y)
+    menu
+
+removerMenu = do
+            (n, a, y) <- pedirMusica
+            remover (Musica n a y)
+            menu
+
+resetarDatabase = do
+    newBD
+    menu
+
+buscarArtistaMenu = do
+            a <- pedirArtista
+            buscarArtista a>>=printarMusica
+            putStr "\n"
+            menu
+
+buscarAnoMenu = do
+    y <- pedirAno
+    buscarAno y>>=printarMusica
+    putStr "\n"
+    menu
+
+buscarNomeMenu = do
+    n <- pedirNome
+    buscarNome n>>=printarMusica
+    putStr "\n"
+    menu
+
+consultarMenu = do
+    (n, a, y) <- pedirMusica
+    check <- consultar(Musica n a y)
+    if(check)then putStrLn "A musica esta na lista!" else putStrLn"Tente novamente!"
+    menu
+
+
+--função menu procedural
+menu::IO()
+menu = do
+    fileExist <- doesFileExist "bancodados.txt"
+    if(fileExist) then putStr""
+    	else newBD
+    putStrLn "               -----------MENU PRINCIPAL -----------"
+    putStrLn "\n"
+    putStrLn "                     1. Adicionar musica"
+    putStrLn "                     2. Remover musica"
+    putStrLn "                     3. Buscar por Nome"
+    putStrLn "                     4. Buscar por Artista"
+    putStrLn "                     5. Buscar por Ano"
+    putStrLn "                     6. Consultar"
+    putStrLn "                     7. Resetar database"
+    putStrLn "                     8. Mostrar banco de Dados"
+    putStrLn "                     9. Sair"
+    putStr "Opcao:"
+    op <- getLine
+    option (op)
+
+
+-- opções
+option :: String -> IO()
+option s |s=="1" = addMenu
+         |s=="2" = removerMenu
+         |s=="3" = buscarNomeMenu
+         |s=="4" = buscarArtistaMenu
+         |s=="5" = buscarAnoMenu
+         |s=="6" = consultarMenu
+         |s=="7" = resetarDatabase
+         |s=="8" = printTodos
+         |s=="9" = putStrLn"\nObrigado por usar nosso programa\n"
